@@ -4,9 +4,10 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { DarkModeToggle } from './ui/DarkModeToggle'
 import { NotificationBell } from './NotificationBell'
 import { Brand } from './Brand'
+import { Avatar } from './ui/Avatar'
 import { getStoredUser, clearSession } from '../services/auth'
 
-function AppShell({ children }: { children: ReactNode }) {
+function AppShell({ children, photoVersion = 0 }: { children: ReactNode; photoVersion?: number }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -20,9 +21,9 @@ function AppShell({ children }: { children: ReactNode }) {
 
   const navLinks = user
     ? [
-        { to: '/discover', label: 'Find a Tutor' },
+        ...(user.role !== 'TUTOR' ? [{ to: '/discover', label: 'Find a Tutor' }] : []),
         ...(user.role !== 'ADMIN' ? [{to:'/inbox',label:'Messages'}] : []),
-        {to:'/account',label:'Account'},
+        {to:'/account',label:'Account & DP'},
         ...(user.role === 'TUTOR'
           ? [
               { to: '/tutor/setup', label: 'My Profile' },
@@ -63,7 +64,13 @@ function AppShell({ children }: { children: ReactNode }) {
             <DarkModeToggle />
             {user ? (
               <>
-                <NotificationBell />
+                 <NotificationBell />
+                {(user.role === 'STUDENT' || user.role === 'TUTOR') && (
+                  <Link to="/account#profile-photo" aria-label="Add or change DP" title="Add or change DP"
+                    className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                    <Avatar name={user.name} userId={user.id} version={photoVersion} size="sm"/>
+                  </Link>
+                )}
                 <span className="hidden text-sm font-medium text-text-secondary lg:inline">
                   {user.name}
                 </span>

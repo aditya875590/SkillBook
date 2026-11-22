@@ -27,16 +27,22 @@ export default function Account() {
   const [version,update]=useState(0),[video,setVideo]=useState(''),[status,setStatus]=useState(''),[busy,setBusy]=useState(false)
   useEffect(()=>{if(role==='TUTOR') fetchOwnProfile().then(p=>setVideo(p?.introVideo??'')).catch(()=>setStatus('Could not load the tutor profile.'))},[role])
   if(!user)return <Navigate to="/login" replace/>
-  return <AppShell><div className="mx-auto max-w-xl"><header className="workspace-head"><p className="eyebrow">Personal settings</p><h1>My account</h1></header>
+  return <AppShell photoVersion={version}><div className="mx-auto max-w-xl"><header className="workspace-head"><p className="eyebrow">Personal settings</p><h1>My account</h1></header>
     <div className="my-4 space-y-5 rounded-xl border border-border bg-surface p-6">
+      <section id="profile-photo" className="scroll-mt-24 space-y-3" aria-labelledby="profile-photo-heading">
+      <h2 id="profile-photo-heading" className="text-lg font-semibold">Display picture (DP)</h2>
       <Avatar name={user.name} userId={user.id} version={version} size="lg"/>
-      <label className="block font-semibold">Profile photo<input className="mt-2 block w-full text-sm" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={async e=>{
-        const file=e.target.files?.[0]; if(!file)return
-        setBusy(true)
+      <p className="text-sm text-text-secondary">Add or change your profile photo. Choose a JPG, PNG, or WebP up to 12 MB. Your photo is cropped to a square and saved automatically.</p>
+      <label className="block font-semibold">Profile photo<input className="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:font-semibold file:text-text-on-primary" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={async e=>{
+         const file=e.target.files?.[0]; if(!file)return
+         const input=e.currentTarget
+         setStatus('')
+         setBusy(true)
         try{const form=new FormData();form.append('image',await makePhoto(file),'profile.jpg')
           await api.put('/account/photo',form,{headers:{'Content-Type':'multipart/form-data'}});update(Date.now());setStatus('Photo saved.')
-        }catch(err){setStatus(apiErrorMessage(err,'Could not save photo.'))}finally{setBusy(false)}
-      }}/></label>
+        }catch(err){setStatus(apiErrorMessage(err,'Could not save photo.'))}finally{setBusy(false);input.value=''}
+       }}/></label>
+      </section>
       {role==='TUTOR' && <form onSubmit={async e=>{
         e.preventDefault();setBusy(true)
         try{await api.put('/account/intro-video',{url:video});setStatus('Intro video saved.')}catch(err){setStatus(apiErrorMessage(err,'Could not save video.'))}finally{setBusy(false)}
