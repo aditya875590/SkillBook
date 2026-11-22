@@ -66,8 +66,12 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public List<BookingResponse> listMyBookings(String email) {
-        User student = findStudentByEmail(email);
-        return bookingRepository.findAllByStudentIdOrderByCreatedAtDesc(student.getId()).stream()
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        var bookings = user.getRole() == Role.TUTOR
+                ? bookingRepository.findAllBySlot_Tutor_IdOrderByCreatedAtDesc(user.getId())
+                : bookingRepository.findAllByStudentIdOrderByCreatedAtDesc(user.getId());
+        return bookings.stream()
                 .map(this::withPayment)
                 .toList();
     }

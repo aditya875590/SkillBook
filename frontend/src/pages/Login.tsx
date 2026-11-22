@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/AuthLayout'
+import { GoogleButton } from '../components/GoogleButton'
+import { useSearchParams } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Alert } from '../components/ui/Alert'
@@ -8,6 +10,9 @@ import { login, apiErrorMessage } from '../services/auth'
 
 function Login() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const tutor = params.get('tutor')
+  const destination = tutor && /^[a-f0-9-]{36}$/i.test(tutor) ? `/tutors/${tutor}` : '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -36,7 +41,7 @@ function Login() {
     setSubmitting(true)
     try {
       await login({ email: email.trim(), password })
-      navigate('/', { replace: true })
+      navigate(destination, { replace: true })
     } catch (err) {
       setFormError(
         apiErrorMessage(err, 'Unable to sign in. Please try again.'),
@@ -49,7 +54,7 @@ function Login() {
   return (
     <AuthLayout>
       <div className="mb-6">
-        <h1 className="m-0 text-2xl font-bold text-text">SkillBook</h1>
+        <h1 className="m-0 text-2xl font-bold text-text">Welcome back.</h1>
         <p className="m-0 mt-1 text-sm text-text-secondary">
           Sign in to continue
         </p>
@@ -61,6 +66,7 @@ function Login() {
         </Alert>
       )}
 
+      <GoogleButton done={() => navigate(destination,{replace:true})}/>
       <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
         <Input
           label="Email"
@@ -91,7 +97,7 @@ function Login() {
         <p className="m-0 text-center text-sm text-text-secondary">
           No account?{' '}
           <Link
-            to="/register"
+            to={destination === '/' ? '/register' : `/register?tutor=${tutor}`}
             className="font-semibold text-primary underline-offset-2 hover:underline"
           >
             Register

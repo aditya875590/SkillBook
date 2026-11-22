@@ -22,6 +22,7 @@ function TutorSetup() {
       .then((profile) => {
         if (profile) {
           setBio(profile.bio ?? '')
+          setSkills(profile.skills?.map(s=>s.name).join(', ') ?? '')
           setExperienceYears(profile.experienceYears?.toString() ?? '')
           setHourlyRate(profile.hourlyRate?.toString() ?? '')
         }
@@ -61,9 +62,7 @@ function TutorSetup() {
 
     try {
       await upsertProfile({ bio, experienceYears: years, hourlyRate: rate })
-      if (skillNames.length > 0) {
-        await replaceSkills(skillNames)
-      }
+      await replaceSkills(skillNames)
       setSuccess(
         'Profile saved! You can now be discovered by students on the Find a Tutor page.',
       )
@@ -87,7 +86,8 @@ function TutorSetup() {
   return (
     <AppShell>
       <div className="mx-auto max-w-xl">
-        <div className="mb-6">
+        <div className="workspace-head mb-6">
+          <p className="eyebrow">Tutor studio / Profile</p>
           <h1 className="m-0 text-2xl font-bold text-text">
             Set up your tutor profile
           </h1>

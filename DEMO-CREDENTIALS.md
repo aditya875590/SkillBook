@@ -1,59 +1,48 @@
 # SkillBook — Demo Credentials
 
-Ready-made accounts so you can log in and explore every role immediately.
-Accounts are stored in the Docker Postgres volume, so you create them **once**
-and they survive restarts.
+These three accounts were successfully checked against the current local backend on **2026-11-22**. They exist in the database configured by this checkout's root `.env`; a fresh database will not automatically contain them.
 
-## The three accounts
+Login: **http://localhost:5191/login**
 
-| Role    | Email                  | Password       |
-| ------- | ---------------------- | -------------- |
-| Tutor   | `tutor@skillbook.demo` | `TutorDemo123!` |
+| Role | Email | Password |
+| --- | --- | --- |
+| Tutor | `tutor@skillbook.demo` | `TutorDemo123!` |
 | Student | `student@skillbook.demo` | `StudentDemo123!` |
-| Admin   | `admin@skillbook.demo` | `AdminDemo123!` |
+| Admin | `admin@skillbook.demo` | `AdminDemo123!` |
 
-Login at **http://localhost:5173/login** with any of these.
+These are local demo accounts, not production credentials. `FACULTY` is not a role; use Tutor for a teaching account. Admin can sign in, but full admin management screens are not implemented.
 
-## How to create them (one-time, backend must be running)
+## Two-user demonstration
 
-Copy-paste into a terminal (backend at `http://localhost:8080/api`):
+Use separate browser profiles or a normal window plus an incognito window. Two tabs in the same browser profile share the login cookie.
+
+1. **Tutor:** sign in, open tutor setup, save bio/rate/subjects, and add a future availability slot.
+2. **Tutor:** open Account, upload a photo, and optionally save a public YouTube/direct-video URL.
+3. **Student:** sign in, open Find a Tutor, and save matching subjects under learning goals.
+4. **Student:** open the tutor profile and select Message tutor. Send a pre-booking question.
+5. **Tutor:** open Messages and reply.
+6. **Student:** return to the profile, book the future slot, and open My Bookings.
+7. **Both:** open Chat on the same booking and exchange messages.
+8. **Tutor:** choose Add lesson link and share a valid Zoom or Google Meet URL.
+9. **Student:** refresh My Bookings if needed and select Join video lesson.
+10. Reviews become available only after a lesson is completed. Payment checkout requires working Stripe configuration.
+
+## Creating accounts in a fresh local database
+
+Only run these when you intend to create demo data. Start the backend first using [HOW-TO-RUN.md](HOW-TO-RUN.md).
 
 ```bash
-# Tutor
-curl -s -X POST http://localhost:8080/api/auth/register \
+curl -sS -X POST http://localhost:8081/api/auth/register \
   -H 'Content-Type: application/json' \
   -d '{"name":"Demo Tutor","email":"tutor@skillbook.demo","password":"TutorDemo123!","role":"TUTOR"}'
-
-# Student
-curl -s -X POST http://localhost:8080/api/auth/register \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Demo Student","email":"student@skillbook.demo","password":"StudentDemo123!","role":"STUDENT"}'
-
-# Admin (the UI only offers Student/Tutor, so use the API)
-curl -s -X POST http://localhost:8080/api/auth/register \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Demo Admin","email":"admin@skillbook.demo","password":"AdminDemo123!","role":"ADMIN"}'
 ```
-
-`"success":true` = created. If you get an "email already exists" error, the
-account already exists — just log in.
-
-Verify quickly via the API:
 
 ```bash
-curl -s -X POST http://localhost:8080/api/auth/login \
+curl -sS -X POST http://localhost:8081/api/auth/register \
   -H 'Content-Type: application/json' \
-  -d '{"email":"tutor@skillbook.demo","password":"TutorDemo123!"}' | head -c 300
+  -d '{"name":"Demo Student","email":"student@skillbook.demo","password":"StudentDemo123!","role":"STUDENT"}'
 ```
 
-## What to explore as each role
+Public registration cannot create an admin. An existing admin is provisioned separately by the database operator. An “email already exists” response confirms the email is registered, not that its password matches this document.
 
-- **Tutor** — on http://localhost:5173/ go to *My Profile* (set bio + hourly
-  rate + skills), then *Availability* (add weekly rules, generate slots).
-- **Student** — *Find a Tutor* on the home page, open a tutor, book a slot,
-  then *My Bookings* (pay / cancel; a full refund applies > 24h before start).
-- **Admin** — log in (any browser) to confirm the role loads; full admin
-  management screens are not built yet (backend role checks exist).
-
-> Note: a `FACULTY` role does not exist — the three roles are
-> STUDENT / TUTOR / ADMIN. A "faculty" teaching account is the Tutor role.
+Application restarts preserve accounts. Switching databases or deleting a database volume does not. For stop/restart commands, see [HOW-TO-RUN.md](HOW-TO-RUN.md#stop-and-restart).

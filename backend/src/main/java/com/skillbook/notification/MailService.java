@@ -23,6 +23,17 @@ public class MailService {
 
     private final JavaMailSender mailSender;
     private final boolean enabled;
+    @Value("${BREVO_API_KEY:}") private String brevoKey = "";
+    @Value("${BREVO_SENDER_EMAIL:}") private String sender = "";
+    private org.springframework.web.client.RestClient brevo = brevoClient();
+
+    private static org.springframework.web.client.RestClient brevoClient() {
+        var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(3000);
+        factory.setReadTimeout(4000);
+        return org.springframework.web.client.RestClient.builder().requestFactory(factory)
+                .baseUrl("https://api.brevo.com/v3").build();
+    }
 
     public MailService(JavaMailSender mailSender, @Value("${mail.enabled:false}") boolean enabled) {
         this.mailSender = mailSender;
@@ -35,6 +46,14 @@ public class MailService {
             return;
         }
         try {
+            if (!brevoKey.isBlank()) {
+                if (sender.isBlank()) throw new IllegalStateException("BREVO_SENDER_EMAIL missing");
+                brevo.post().uri("/smtp/email").header("api-key", brevoKey)
+                        .body(java.util.Map.of("sender", java.util.Map.of("email",sender),
+                                "to", java.util.List.of(java.util.Map.of("email",to)),
+                                "subject",subject,"textContent",body)).retrieve().toBodilessEntity();
+                return;
+            }
             MimeMessage message = mailSender.createMimeMessage();
             message.setRecipient(Message.RecipientType.TO, new InternetAddress(to));
             message.setSubject(subject, StandardCharsets.UTF_8.name());

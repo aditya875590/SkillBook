@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { DarkModeToggle } from './ui/DarkModeToggle'
 import { NotificationBell } from './NotificationBell'
+import { Brand } from './Brand'
 import { getStoredUser, clearSession } from '../services/auth'
 
 function AppShell({ children }: { children: ReactNode }) {
@@ -11,41 +12,36 @@ function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const user = getStoredUser()
 
-  const handleLogout = () => {
-    clearSession()
-    navigate('/login', { replace: true })
+  const [logoutError,setLogoutError] = useState('')
+  const handleLogout = async () => {
+    try {await clearSession();navigate('/login', { replace: true })}
+    catch {setLogoutError('Could not sign out. Please try again.')}
   }
 
   const navLinks = user
     ? [
         { to: '/discover', label: 'Find a Tutor' },
+        ...(user.role !== 'ADMIN' ? [{to:'/inbox',label:'Messages'}] : []),
+        {to:'/account',label:'Account'},
         ...(user.role === 'TUTOR'
           ? [
               { to: '/tutor/setup', label: 'My Profile' },
               { to: '/tutor/availability', label: 'Availability' },
             ]
           : []),
-        ...(user.role === 'STUDENT'
+        ...(user.role === 'STUDENT' || user.role === 'TUTOR'
           ? [{ to: '/bookings', label: 'My Bookings' }]
           : []),
       ]
-    : []
+    : [{ to: '/discover', label: 'Find a tutor' }, { to: '/register?role=tutor', label: 'Become a tutor' }]
 
   const isActive = (to: string) => location.pathname === to
 
   return (
-    <div className="min-h-screen bg-surface-secondary">
+    <div className="site min-h-screen bg-surface-secondary">
       <header className="sticky top-0 z-30 border-b border-border bg-surface/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-          <Link
-            to={user ? '/discover' : '/'}
-            className="flex items-center gap-2 no-underline"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-bold text-sm text-text-on-primary">
-              SB
-            </div>
-            <span className="text-lg font-bold text-text">SkillBook</span>
-          </Link>
+          <Brand />
 
           <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
             {navLinks.map((link) => (
@@ -127,7 +123,7 @@ function AppShell({ children }: { children: ReactNode }) {
         )}
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      <main className="site-main mx-auto w-full max-w-6xl px-4 py-8">{logoutError && <p role="alert">{logoutError}</p>}{children}</main>
 
       <footer className="border-t border-border bg-surface">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6">
@@ -135,7 +131,7 @@ function AppShell({ children }: { children: ReactNode }) {
             © {new Date().getFullYear()} SkillBook. All rights reserved.
           </p>
           <p className="m-0 text-sm text-text-secondary/70">
-            Built with Spring Boot & React
+            One-to-one learning
           </p>
         </div>
       </footer>

@@ -62,6 +62,7 @@ interface TutorProfilePayload {
 }
 
 interface TutorProfile extends TutorProfilePayload {
+  introVideo?: string
   id: string
   userId: string
   name: string
@@ -119,6 +120,7 @@ interface BookingTutorInfo {
 }
 
 interface Booking {
+  meetingUrl?: string
   id: string
   status: 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
   message: string | null

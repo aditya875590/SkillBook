@@ -26,20 +26,21 @@ import java.util.Optional;
 public class AuthController {
 
     private final AuthService authService;
+    private final BrowserSession sessions;
     private final UserRepository userRepository;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(
-            @Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = authService.register(request);
+            @Valid @RequestBody RegisterRequest request,jakarta.servlet.http.HttpServletRequest http,jakarta.servlet.http.HttpServletResponse output) {
+        AuthResponse response = sessions.issue(authService.register(request),http,output);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(response));
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(
-            @Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
+            @Valid @RequestBody LoginRequest request,jakarta.servlet.http.HttpServletRequest http,jakarta.servlet.http.HttpServletResponse output) {
+        AuthResponse response = sessions.issue(authService.login(request),http,output);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 

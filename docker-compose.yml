@@ -16,5 +16,25 @@ services:
       timeout: 3s
       retries: 5
 
+  backend:
+    profiles: [app]
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/skillbook
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      SPRING_JPA_SHOW_SQL: "false"
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: INFO
+      LOGGING_LEVEL_COM_SKILLBOOK: INFO
+  web:
+    profiles: [app]
+    build: ./frontend
+    depends_on: [backend]
+    ports: ["127.0.0.1:5080:80"]
+
 volumes:
   pgdata:

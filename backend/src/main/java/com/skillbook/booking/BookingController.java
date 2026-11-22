@@ -31,7 +31,7 @@ public class BookingController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT','TUTOR')")
     public ResponseEntity<ApiResponse<List<BookingResponse>>> listMyBookings(Authentication authentication) {
         return ResponseEntity.ok(ApiResponse.ok(bookingService.listMyBookings(authentication.getName())));
     }

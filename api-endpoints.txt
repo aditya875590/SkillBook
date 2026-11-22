@@ -1,8 +1,10 @@
 ===============================================================================
  SkillBook API Endpoints
- Base URL: http://localhost:8080/api   (production: <host>/api)
- All requests except those marked "Public" require the header:
-   Authorization: Bearer <token>
+ Updated: 2026-11-22
+ Local base URL: http://localhost:8081/api   (deployment: <host>/api)
+ Protected endpoints accept Authorization: Bearer <token> for CLI clients.
+ Browsers use an HttpOnly session cookie, credentials included, and
+ X-SkillBook-Session: cookie. Cookie-authenticated writes require this header.
  Roles: STUDENT, TUTOR, ADMIN
 ===============================================================================
 
@@ -11,6 +13,18 @@ AUTH
 POST   /auth/register                 Public      Create account (name, email, password, role)
 POST   /auth/login                    Public      Login -> returns JWT token + user
 GET    /auth/me                       Authenticated  Get current user from token
+POST   /auth/logout                   Public      Clear cookie; session header required
+GET    /auth/google                   Public      Google client configuration
+POST   /auth/google                   Public      Verify Google ID token; sign in/register
+POST   /account/google                Authenticated  Link matching Google account
+  Browser login/register/Google responses omit the JWT and set a cookie.
+  Public registration accepts STUDENT/TUTOR only.
+
+ACCOUNT MEDIA
+-------------
+PUT    /account/photo                 Authenticated  Upload own JPEG photo
+PUT    /account/intro-video           TUTOR       Save introduction video URL
+GET    /people/{id}/photo             Public      Photo bytes (not JSON)
 
 STUDENTS
 --------
@@ -18,11 +32,12 @@ PUT    /students/profile              STUDENT     Upsert own student profile
 GET    /students/profile              STUDENT     Get own student profile
 PUT    /students/profile/skills       STUDENT     Upsert student skill interests
 GET    /students/profile/skills       STUDENT     Get own skill interests
+GET    /students/matches              STUDENT     Top five tutors matching saved goals
 
 TUTORS (profile)
 ----------------
 PUT    /tutors/profile                TUTOR       Upsert own tutor profile
-GET    /tutors/profile                Authenticated  Get own tutor profile
+GET    /tutors/profile                TUTOR       Get own tutor profile
 GET    /tutors/{userId}               Public      Get a public tutor profile
 PUT    /tutors/profile/skills         TUTOR       Upsert tutor skills
 GET    /tutors/profile/skills         TUTOR       Get own tutor skills
@@ -48,9 +63,23 @@ GET    /tutors/{userId}/availability  Public      Get a tutor's bookable slots
 BOOKINGS
 --------
 POST   /bookings                      STUDENT     Request/book a slot (message optional)
-GET    /bookings                      STUDENT     List own bookings (with payment info)
+GET    /bookings                      STUDENT/TUTOR  List own bookings (with payment info)
 GET    /bookings/{bookingId}          STUDENT     Get one of own bookings
 POST   /bookings/{bookingId}/cancel   STUDENT     Cancel a booking (refund policy applies)
+
+COMMUNICATION AND REVIEWS
+-------------------------
+GET    /inbox                         STUDENT/TUTOR  Own conversation contacts
+GET    /inbox/{peer}                  STUDENT/TUTOR  Own messages with peer
+POST   /inbox/{peer}                  STUDENT/TUTOR  Send direct message {body}
+GET    /bookings/{id}/messages        Participant  Latest booking messages
+POST   /bookings/{id}/messages        Participant  Send booking message {body}
+WS     /live/bookings/{id}            Participant  Authenticated change notifications
+PUT    /bookings/{id}/meeting         Own TUTOR   Share lesson URL {url}
+POST   /bookings/{id}/review          Own STUDENT Review completed lesson {stars,comment}
+GET    /tutors/{id}/reviews           Public      Tutor reviews
+  Participant = the booking's student or tutor, verified server-side.
+  Meeting URLs are returned in authorized booking responses.
 
 PAYMENTS (Stripe)
 -----------------

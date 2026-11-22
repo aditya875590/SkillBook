@@ -1,4 +1,8 @@
+import { useState } from 'react'
+import api from '../../services/api'
 interface AvatarProps {
+  userId?: string
+  version?: number
   name: string
   size?: 'sm' | 'md' | 'lg'
 }
@@ -9,7 +13,9 @@ const sizeClasses = {
   lg: 'h-20 w-20 text-2xl',
 }
 
-function Avatar({ name, size = 'md' }: AvatarProps) {
+function Avatar({ name, size = 'md', userId, version=0 }: AvatarProps) {
+  const src = userId ? api.getUri({url:`/people/${userId}/photo`,params:{v:version}}) : ''
+  const [failed,setFailed] = useState('')
   const initials = name
     .split(' ')
     .map((part) => part[0])
@@ -18,6 +24,8 @@ function Avatar({ name, size = 'md' }: AvatarProps) {
     .join('')
     .toUpperCase()
 
+  if (src && failed !== src) return <img src={src} alt={name} loading="lazy" onError={() => setFailed(src)}
+    className={`shrink-0 rounded-full object-cover ${sizeClasses[size]}`} />
   return (
     <div
       role="img"

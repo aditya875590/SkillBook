@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { AuthLayout } from '../components/AuthLayout'
+import { GoogleButton } from '../components/GoogleButton'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Alert } from '../components/ui/Alert'
@@ -14,7 +15,10 @@ function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [role, setRole] = useState<Role>('STUDENT')
+  const [params] = useSearchParams()
+  const tutor = params.get('tutor')
+  const destination = tutor && /^[a-f0-9-]{36}$/i.test(tutor) ? `/tutors/${tutor}` : '/'
+  const [role, setRole] = useState<Role>(params.get('role') === 'tutor' ? 'TUTOR' : 'STUDENT')
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
   const [error, setError] = useState<{
@@ -59,7 +63,7 @@ function Register() {
         password,
         role,
       })
-      navigate('/', { replace: true })
+      navigate(destination, { replace: true })
     } catch (err) {
       setFormError(
         apiErrorMessage(err, 'Unable to create account. Please try again.'),
@@ -168,6 +172,7 @@ function Register() {
             ))}
           </div>
         </fieldset>
+        <GoogleButton role={role} done={() => navigate(destination,{replace:true})}/>
 
         <Button type="submit" loading={submitting} className="w-full">
           {submitting ? 'Creating account…' : 'Register'}
@@ -176,7 +181,7 @@ function Register() {
         <p className="m-0 text-center text-sm text-text-secondary">
           Already have an account?{' '}
           <Link
-            to="/login"
+            to={destination==='/'?'/login':`/login?tutor=${tutor}`}
             className="font-semibold text-primary underline-offset-2 hover:underline"
           >
             Sign in

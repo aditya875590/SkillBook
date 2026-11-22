@@ -26,6 +26,8 @@ import java.time.OffsetDateTime;
 @Setter
 @NoArgsConstructor
 public class Booking extends BaseEntity {
+    @Column(length = 2048)
+    private String meetingUrl;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "student_id", nullable = false)

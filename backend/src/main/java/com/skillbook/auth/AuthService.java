@@ -24,6 +24,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
+        if (request.role() == Role.ADMIN) throw new IllegalArgumentException("Choose a student or tutor account");
         String email = request.email().toLowerCase().trim();
 
         if (userRepository.existsByEmail(email)) {
@@ -53,7 +54,7 @@ public class AuthService {
         return buildAuthResponse(user);
     }
 
-    private AuthResponse buildAuthResponse(User user) {
+    AuthResponse buildAuthResponse(User user) {
         UserResponse userResponse = new UserResponse(
                 user.getId(), user.getEmail(), user.getName(), user.getRole());
         String role = user.getRole() == null ? Role.STUDENT.name() : user.getRole().name();

@@ -22,7 +22,7 @@ export interface LoginPayload {
 }
 
 function storeSession(data: AuthResponse): void {
-  localStorage.setItem(TOKEN_KEY, data.token)
+  localStorage.removeItem(TOKEN_KEY)
   localStorage.setItem(USER_KEY, JSON.stringify(data.user))
 }
 
@@ -37,12 +37,15 @@ export function getStoredUser(): User | null {
   }
 }
 
-export function clearSession(): void {
+export async function clearSession(): Promise<void> {
+  await api.post('/auth/logout')
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(USER_KEY)
 }
 
 export function apiErrorMessage(error: unknown, fallback: string): string {
+  const server = (error as { response?: { data?: ApiError } } | null)?.response?.data?.error
+  if (server) return server
   if (typeof error === 'object' && error !== null) {
     const apiError = error as ApiError
     if (apiError.error) return apiError.error
@@ -72,6 +75,10 @@ export async function register(payload: RegisterPayload): Promise<User> {
 
 export async function login(payload: LoginPayload): Promise<User> {
   return authRequest(() => api.post('/auth/login', payload))
+}
+
+export function googleLogin(credential: string, role: 'STUDENT' | 'TUTOR') {
+  return authRequest(() => api.post('/auth/google', { credential, role }))
 }
 
 export async function fetchMe(): Promise<User> {

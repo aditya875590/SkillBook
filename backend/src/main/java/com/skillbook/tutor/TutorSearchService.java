@@ -5,14 +5,12 @@ import com.skillbook.skill.SkillOfferedRepository;
 import com.skillbook.skill.dto.SkillResponse;
 import com.skillbook.tutor.dto.TutorSearchResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,16 +36,12 @@ public class TutorSearchService {
 
         Page<TutorProfile> profiles = tutorProfileRepository.search(
                 toLikePattern(q), blankToNull(skill), minRate, maxRate, minRating, pageable);
-
         Map<UUID, List<SkillResponse>> skillsByUserId = loadSkills(profiles.getContent());
-
         return profiles.map(profile -> toResponse(profile, skillsByUserId));
     }
 
     private Sort resolveSort(String sort) {
-        if (sort == null || sort.isBlank()) {
-            return Sort.by(Sort.Direction.DESC, "rating");
-        }
+        if (sort == null || sort.isBlank()) return Sort.by(Sort.Direction.DESC, "rating");
         return switch (sort.trim()) {
             case "rating_desc" -> Sort.by(Sort.Direction.DESC, "rating");
             case "rating_asc" -> Sort.by(Sort.Direction.ASC, "rating");
@@ -60,36 +54,20 @@ public class TutorSearchService {
     }
 
     private Map<UUID, List<SkillResponse>> loadSkills(List<TutorProfile> profiles) {
-        if (profiles.isEmpty()) {
-            return Map.of();
-        }
-        List<UUID> userIds = profiles.stream()
-                .map(profile -> profile.getUser().getId())
-                .toList();
-
+        if (profiles.isEmpty()) return Map.of();
+        List<UUID> userIds = profiles.stream().map(profile -> profile.getUser().getId()).toList();
         List<SkillOffered> offered = skillOfferedRepository.findByTutorIdsWithSkill(userIds);
-        return offered.stream()
-                .collect(Collectors.groupingBy(
-                        offer -> offer.getTutor().getId(),
-                        Collectors.mapping(o -> SkillResponse.from(o.getSkill()), Collectors.toList())));
+        return offered.stream().collect(Collectors.groupingBy(
+                offer -> offer.getTutor().getId(),
+                Collectors.mapping(offer -> SkillResponse.from(offer.getSkill()), Collectors.toList())));
     }
 
     private TutorSearchResponse toResponse(TutorProfile profile, Map<UUID, List<SkillResponse>> skillsByUserId) {
         List<SkillResponse> skills = skillsByUserId.getOrDefault(profile.getUser().getId(), List.of())
-                .stream()
-                .sorted(java.util.Comparator.comparing(SkillResponse::name))
-                .toList();
-
-        return new TutorSearchResponse(
-                profile.getId(),
-                profile.getUser().getId(),
-                profile.getUser().getName(),
-                profile.getBio(),
-                profile.getExperienceYears(),
-                profile.getHourlyRate(),
-                profile.getRating(),
-                skills,
-                profile.getCreatedAt());
+                .stream().sorted(Comparator.comparing(SkillResponse::name)).toList();
+        return new TutorSearchResponse(profile.getId(), profile.getUser().getId(), profile.getUser().getName(),
+                profile.getBio(), profile.getExperienceYears(), profile.getHourlyRate(), profile.getRating(),
+                skills, profile.getCreatedAt());
     }
 
     private String blankToNull(String value) {
@@ -98,6 +76,6 @@ public class TutorSearchService {
 
     private String toLikePattern(String value) {
         String v = blankToNull(value);
-        return (v == null) ? null : "%" + v.toLowerCase() + "%";
+        return v == null ? null : "%" + v.toLowerCase() + "%";
     }
 }

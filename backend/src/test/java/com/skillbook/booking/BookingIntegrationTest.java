@@ -164,6 +164,51 @@ class BookingIntegrationTest {
                 .toInstant().toString();
     }
 
+    @Test
+    @org.springframework.transaction.annotation.Transactional
+    void studentsCanContactBeforeBookingAndJoinOnlyTheirOwnLesson() throws Exception {
+        var tutor = tutorToken();
+        var student = studentToken();
+        var other = secondStudentToken();
+        var tutorId = studentId("alice@example.com");
+        var studentId = studentId("bob@example.com");
+        setHourlyRate(tutor);
+        mockMvc.perform(put("/tutors/profile/skills").header("Authorization","Bearer "+tutor)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"skills\":[\"English\"]}")).andExpect(status().isOk());
+        mockMvc.perform(put("/students/profile/skills").header("Authorization","Bearer "+student)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"skills\":[\"English\",\"Physics\"]}")).andExpect(status().isOk());
+        // Requests share this test transaction; expose JPA writes to the JDBC match query.
+        userRepository.flush();
+        mockMvc.perform(get("/students/matches").header("Authorization","Bearer "+student))
+                .andExpect(jsonPath("$.data[0].matched").value(1)).andExpect(jsonPath("$.data[0].wanted").value(2));
+        mockMvc.perform(post("/inbox/"+tutorId).header("Authorization","Bearer "+student)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"body\":\"Do you teach beginners?\"}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/inbox").header("Authorization","Bearer "+tutor)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].name").value("Student Bob"));
+        mockMvc.perform(post("/inbox/"+studentId).header("Authorization","Bearer "+tutor)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"body\":\"Yes!\"}")).andExpect(status().isOk());
+        mockMvc.perform(get("/inbox/"+tutorId).header("Authorization","Bearer "+other))
+                .andExpect(jsonPath("$.data.length()").value(0));
+        var booking = createBooking(student,createSlot(tutor,nowPlusHoursIso(24),nowPlusHoursIso(25)));
+        var link = "https://zoom.us/j/123456789";
+        mockMvc.perform(put("/bookings/"+booking+"/meeting").header("Authorization","Bearer "+tutor)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"url\":\""+link+"\"}")).andExpect(status().isOk());
+        mockMvc.perform(get("/bookings").header("Authorization","Bearer "+student))
+                .andExpect(jsonPath("$.data[0].meetingUrl").value(link));
+        mockMvc.perform(get("/bookings").header("Authorization","Bearer "+other))
+                .andExpect(jsonPath("$.data.length()").value(0));
+        String review="{\"stars\":5,\"comment\":\"Very helpful\"}";
+        mockMvc.perform(post("/bookings/"+booking+"/review").header("Authorization","Bearer "+student)
+                .contentType(MediaType.APPLICATION_JSON).content(review)).andExpect(status().isConflict());
+        bookingRepository.findById(booking).orElseThrow().setStatus(BookingStatus.COMPLETED);
+        mockMvc.perform(post("/bookings/"+booking+"/review").header("Authorization","Bearer "+student)
+                .contentType(MediaType.APPLICATION_JSON).content(review)).andExpect(status().isOk());
+        mockMvc.perform(get("/tutors/"+tutorId+"/reviews")).andExpect(jsonPath("$.data[0].stars").value(5));
+        mockMvc.perform(post("/bookings/"+booking+"/review").header("Authorization","Bearer "+student)
+                .contentType(MediaType.APPLICATION_JSON).content(review)).andExpect(status().isConflict());
+    }
+
     private UUID studentId(String email) {
         return userRepository.findByEmail(email).get().getId();
     }

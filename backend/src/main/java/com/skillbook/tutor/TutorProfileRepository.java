@@ -13,6 +13,8 @@ import java.util.UUID;
 public interface TutorProfileRepository extends JpaRepository<TutorProfile, UUID> {
 
     Optional<TutorProfile> findByUser_Id(UUID userId);
+    @Query(value="select * from tutor_profiles where user_id=:id for update",nativeQuery=true)
+    TutorProfile lockTutor(UUID id);
 
     @Query(value = """
             select distinct tp from TutorProfile tp

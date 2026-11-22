@@ -2,22 +2,22 @@
 
 @theme {
   /* ── Brand ── */
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-ring: rgba(37, 99, 235, 0.3);
+  --color-primary: #194a38;
+  --color-primary-hover: #306348;
+  --color-primary-ring: #64a48899;
 
   /* ── Surfaces ── */
   --color-surface: #ffffff;
-  --color-surface-secondary: #f9fafb;
-  --color-surface-input: #f3f4f6;
+  --color-surface-secondary: #faf9f3;
+  --color-surface-input: #f4f5ed;
 
   /* ── Borders ── */
-  --color-border: #e5e7eb;
-  --color-border-input: #d1d5db;
+  --color-border: #d4d8ca;
+  --color-border-input: #a7b2a2;
 
   /* ── Text ── */
-  --color-text: #111827;
-  --color-text-secondary: #6b7280;
+  --color-text: #202e26;
+  --color-text-secondary: #526253;
   --color-text-on-primary: #ffffff;
 
   /* ── Feedback ── */
@@ -36,14 +36,18 @@
 
 /* ── Tailwind v4 dark mode tokens (class-based: add .dark to <html>) ── */
 .dark {
-  --color-surface: #1a1a2e;
-  --color-surface-secondary: #16213e;
-  --color-surface-input: #1e293b;
-  --color-border: #334155;
-  --color-border-input: #475569;
-  --color-text: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-primary-ring: rgba(37, 99, 235, 0.4);
+  color-scheme: dark;
+  --color-surface: #23342a;
+  --color-surface-secondary: #19251e;
+  --color-surface-input: #304438;
+  --color-border: #42564a;
+  --color-border-input: #738779;
+  --color-text: #f4f5e9;
+  --color-text-secondary: #bbc9bb;
+  --color-primary: #b8dfa8;
+  --color-primary-hover: #d2edc8;
+  --color-text-on-primary: #19251e;
+  --color-primary-ring: #b8dfa888;
   --color-error-bg: #1c1917;
   --color-success-bg: #14532d;
 }
@@ -74,4 +78,55 @@ input:focus-visible,
 button:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+
+.site {display:flex;flex-direction:column}
+.site-main {flex:1}
+.brand {display:inline-flex;align-items:center;gap:.48rem;font: bold 1.65rem Georgia,serif;letter-spacing:-.075em;color:var(--color-primary);text-decoration:none}
+.eyebrow,.photo-label,.step-number {font:700 .68rem/1.4 ui-monospace,monospace;letter-spacing:.13em;text-transform:uppercase}
+.eyebrow {display:flex;align-items:center;gap:.65rem}
+.signal {display:inline-block;width:.58rem;height:.58rem;background:#216343;border-radius:50%;box-shadow:0 0 0 3px #21634320}
+.lesson-hero,.workspace-head,.auth-spread aside {background-color:#dfeacc;color:#173d2c}
+.lesson-hero {display:grid;grid-template-columns:1.05fr 1fr;align-items:center;gap:6%;padding:clamp(2rem,5vw,4.5rem);border:1px solid #b4c3a4;border-radius:1.4rem;background-image:radial-gradient(#98ad8860 .8px,transparent .8px);background-size:12px 12px}
+.lesson-hero h1,.auth-spread h2,.steps h2,.workspace-head h1,.auth-form h1,.profile-panel h1 {font-family:Georgia,'Times New Roman',serif;font-weight:500;line-height:.99;letter-spacing:-.06em}
+.lesson-hero h1 {margin:1.45rem 0;font-size:clamp(3.6rem,6.1vw,5.75rem)}
+.lesson-hero em,.auth-spread em {color:#376747}
+.hero-intro {max-width:36ch;font-size:1.04rem;line-height:1.55}
+.action {display:inline-flex;gap:2rem;align-items:center;background:#173d2c;color:white;padding:.85rem 1.25rem;border-radius:.55rem;font-weight:650;margin-top:1.5rem}
+.action:hover {background:#305d42}
+.lesson-photo {transform:rotate(2deg);position:relative;padding:.8rem;background:#fffdf3;border:1px solid #596d53;box-shadow:7px 8px 0 #aabe94;border-radius:.6rem;color:#203a28}
+.photo-label,.lesson-photo figcaption {display:flex;align-items:center;justify-content:space-between}
+.photo-label {padding:.1rem .2rem .65rem}
+.lesson-photo img {display:block;width:100%;aspect-ratio:1.18;object-fit:cover;border-radius:.22rem}
+.lesson-photo figcaption {justify-content:flex-start;gap:.6rem;padding:.8rem .25rem .1rem;font:italic 1.1rem Georgia,serif}
+.lesson-photo figcaption span:last-child {margin-left:auto;color:#ac4b24;font:1.7rem/1 Georgia,serif}
+.steps {padding:3.3rem 0 1rem}
+.steps h2,.workspace-head h1,.auth-form h1 {font-size:clamp(2.1rem,4vw,3.4rem);margin:.55rem 0 1rem}
+.step-grid {display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.step-grid article {padding:1.35rem;border:1px solid var(--color-border);background:var(--color-surface);border-radius:.8rem}
+.step-number {display:inline-block;padding:.2rem .55rem;border-radius:1rem;color:#243826;background:#dfeacc}
+.step-grid article:nth-child(2) .step-number {background:#f8d5be}
+.step-grid article:nth-child(3) .step-number {background:#f5e69d}
+.step-grid h3 {margin:1rem 0 .4rem;font:500 1.6rem/1.1 Georgia,serif;letter-spacing:-.04em}
+.step-grid p {font-size:.94rem;line-height:1.5;color:var(--color-text-secondary)}
+.workspace-head {padding:clamp(1.35rem,3vw,2.5rem);border-radius:1rem;border-left:.45rem solid #73966e}
+.workspace-head h1,.workspace-head p {color:#173d2c}
+.workspace-head h1:last-child {margin-bottom:0}
+.profile-panel {border-top:.45rem solid #73966e}
+.profile-panel .eyebrow {justify-content:center}
+.auth-page {max-width:74rem;margin:auto;padding:0 1.2rem 2rem}
+.auth-page header {display:flex;align-items:center;justify-content:space-between;min-height:4.5rem}
+.auth-spread {display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--color-border);border-radius:1.4rem;overflow:hidden;background:var(--color-surface);min-height:78vh}
+.auth-spread aside {padding:clamp(2rem,4vw,4rem);display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
+.auth-spread h2 {font-size:clamp(4rem,7vw,6rem);margin:1rem 0 2rem}
+.auth-spread img {width:100%;transform:rotate(-2deg);border:8px solid #fffdf3;box-shadow:4px 5px 0 #afc19f}
+.auth-form {align-self:center;width:100%;max-width:32rem;margin:auto;padding:clamp(1.5rem,4vw,3rem)}
+@media(max-width:720px) {
+  .lesson-hero,.auth-spread,.step-grid {grid-template-columns:1fr}
+  .lesson-hero {gap:2rem;padding:1.7rem}
+  .lesson-photo {width:min(100%,25rem);justify-self:center}
+  .lesson-photo img {aspect-ratio:1.8}
+  .auth-spread aside {padding:1.25rem 1.5rem}
+  .auth-spread h2,.auth-spread aside img {display:none}
+  .auth-spread {min-height:0}
 }

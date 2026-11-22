@@ -25,6 +25,11 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class User extends BaseEntity {
+    private byte[] photo;
+    @Column(length = 2048)
+    private String introVideo;
+    @Column(unique = true)
+    private String googleSubject;
 
     @NotBlank
     @Email

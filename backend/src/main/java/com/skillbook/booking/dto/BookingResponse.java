@@ -20,7 +20,8 @@ public record BookingResponse(
         BookingSlotInfo slot,
         BookingStudentInfo student,
         BookingTutorInfo tutor,
-        PaymentInfo payment
+        PaymentInfo payment,
+        String meetingUrl
 ) {
     public static BookingResponse from(Booking booking) {
         return from(booking, null);
@@ -41,7 +42,8 @@ public record BookingResponse(
                 BookingSlotInfo.from(booking.getSlot()),
                 BookingStudentInfo.from(booking.getStudent()),
                 BookingTutorInfo.from(booking.getSlot().getTutor()),
-                payment
+                payment,
+                booking.getStatus() == com.skillbook.booking.BookingStatus.CONFIRMED ? booking.getMeetingUrl() : null
         );
     }
 }

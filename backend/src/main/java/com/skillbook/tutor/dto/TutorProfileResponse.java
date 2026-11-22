@@ -19,7 +19,8 @@ public record TutorProfileResponse(
         BigDecimal hourlyRate,
         BigDecimal rating,
         List<SkillResponse> skills,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String introVideo
 ) {
         public static TutorProfileResponse from(User user, TutorProfile profile) {
                 return new TutorProfileResponse(
@@ -32,7 +33,7 @@ public record TutorProfileResponse(
                         profile.getHourlyRate(),
                         profile.getRating(),
                         List.of(),
-                        profile.getCreatedAt()
+                        profile.getCreatedAt(), user.getIntroVideo()
                 );
         }
 
@@ -48,7 +49,7 @@ public record TutorProfileResponse(
                         profile.getHourlyRate(),
                         profile.getRating(),
                         skills,
-                        profile.getCreatedAt()
+                        profile.getCreatedAt(), user.getIntroVideo()
                 );
         }
 }

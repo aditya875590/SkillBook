@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AppShell } from '../components/AppShell'
+import { BookingChat } from '../components/BookingChat'
+import { LessonTools } from '../components/LessonTools'
+import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Alert } from '../components/ui/Alert'
 import { Spinner } from '../components/ui/Spinner'
@@ -55,6 +58,8 @@ function formatMoney(value: number, currency: string): string {
 
 function MyBookingsPage() {
   const user = getStoredUser()
+  const role = user?.role
+  const [openChat, setOpenChat] = useState<string | null>(null)
 
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
@@ -76,9 +81,15 @@ function MyBookingsPage() {
   }, [])
 
   useEffect(() => {
-    if (!user || user.role !== 'STUDENT') return
+    if (role !== 'STUDENT' && role !== 'TUTOR') return
     load()
-  }, [user, load])
+    let active=true
+    const refresh=()=>{if(document.visibilityState==='visible') listMyBookings()
+      .then(rows=>{if(active)setBookings(rows)}).catch(()=>{/* keep current bookings while offline */})}
+    window.addEventListener('focus',refresh)
+    const timer=window.setInterval(refresh,10000)
+    return ()=>{active=false;clearInterval(timer);window.removeEventListener('focus',refresh)}
+  }, [role, load])
 
   const handleCancel = async (booking: Booking) => {
     setCancellingId(booking.id)
@@ -114,12 +125,12 @@ function MyBookingsPage() {
     }
   }
 
-  if (!user || user.role !== 'STUDENT') {
+  if (!user || (role !== 'STUDENT' && role !== 'TUTOR')) {
     return (
       <AppShell>
         <div className="mx-auto max-w-xl">
           <Alert type="error">
-            You need a student account to view bookings.
+            Sign in as a student or tutor to view bookings.
           </Alert>
         </div>
       </AppShell>
@@ -129,9 +140,13 @@ function MyBookingsPage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-3xl">
-        <h1 className="text-xl font-bold text-text">My Bookings</h1>
+        <header className="workspace-head"><p className="eyebrow">{role === 'TUTOR' ? 'Tutor studio' : 'Student notebook'}</p><h1>My bookings</h1></header>
 
         {error && <Alert type="error">{error}</Alert>}
+        {role === 'TUTOR' && !loading && !error && <section aria-label="Tutor analytics" className="my-4 grid gap-2 rounded-xl border border-border bg-surface p-4 sm:grid-cols-3">
+          <p><b>{bookings.filter(b=>b.status==='CONFIRMED').length}</b> scheduled</p>
+          <p><b>{bookings.filter(b=>b.status==='COMPLETED').length}</b> completed</p>
+          <p><b>{formatMoney(bookings.reduce((s,b)=>s+(b.payment && ['PAID','PARTIALLY_REFUNDED','REFUNDED'].includes(b.payment.status)?b.payment.amount-(b.payment.refundAmount||0):0),0),'USD')}</b> net payments</p></section>}
 
         {loading ? (
           <div className="flex justify-center py-20 text-text-secondary">
@@ -139,7 +154,7 @@ function MyBookingsPage() {
           </div>
         ) : bookings.length === 0 ? (
           <div className="mt-4 rounded-xl border border-border bg-surface p-6 text-center text-sm text-text-secondary shadow-sm">
-            You have no bookings yet. Find a tutor to book a session.
+            {role === 'TUTOR' ? 'Your booked lessons will appear here.' : 'You have no bookings yet. Find a tutor to book a session.'}
           </div>
         ) : (
           <ul className="mt-4 space-y-4">
@@ -151,8 +166,9 @@ function MyBookingsPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2">
+                      <Avatar size="sm" {...(role === 'TUTOR' ? {userId:booking.student.id,name:booking.student.name} : {userId:booking.tutor.id,name:booking.tutor.name})}/>
                       <h2 className="m-0 text-base font-semibold text-text">
-                        {booking.tutor.name}
+                        {role === 'TUTOR' ? booking.student.name : booking.tutor.name}
                       </h2>
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_CLASSES[booking.status]}`}
@@ -204,7 +220,11 @@ function MyBookingsPage() {
                       )}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-2">
-                    {canPay(booking) && (
+                    <Button variant="secondary" aria-expanded={openChat === booking.id}
+                      onClick={() => setOpenChat(openChat === booking.id ? null : booking.id)}>
+                      {openChat === booking.id ? 'Close chat' : 'Chat'}
+                    </Button>
+                    {role === 'STUDENT' && canPay(booking) && (
                       <Button
                         variant="primary"
                         loading={payingId === booking.id}
@@ -213,7 +233,7 @@ function MyBookingsPage() {
                         Pay
                       </Button>
                     )}
-                    {canCancel(booking) && (
+                    {role === 'STUDENT' && canCancel(booking) && (
                       <Button
                         variant="secondary"
                         loading={cancellingId === booking.id}
@@ -224,6 +244,9 @@ function MyBookingsPage() {
                     )}
                   </div>
                 </div>
+                {openChat === booking.id && <BookingChat bookingId={booking.id} userId={user.id}
+                  partner={role === 'TUTOR' ? booking.student.name : booking.tutor.name} />}
+                <LessonTools b={booking} tutor={role==='TUTOR'}/>
               </li>
             ))}
           </ul>

@@ -31,10 +31,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)
-                && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-            String token = authHeader.substring(BEARER_PREFIX.length());
+        boolean bearer=authHeader!=null && authHeader.startsWith(BEARER_PREFIX);
+        String token=bearer?authHeader.substring(BEARER_PREFIX.length()):BrowserSession.token(request);
+        if(token!=null && !bearer && !java.util.Set.of("GET","HEAD","OPTIONS").contains(request.getMethod())
+                && !"cookie".equals(request.getHeader(BrowserSession.HEADER))) {
+            response.sendError(403,"Session header required");
+            return;
+        }
+        if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 Claims claims = jwtService.parseToken(token);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
@@ -45,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authentication.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (JwtException | IllegalArgumentException e) {
+            } catch (JwtException | IllegalArgumentException | org.springframework.security.core.userdetails.UsernameNotFoundException e) {
                 SecurityContextHolder.clearContext();
             }
         }

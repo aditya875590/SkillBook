@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -23,7 +24,6 @@ public class StudentSkillService {
     public List<SkillResponse> replaceWantedSkills(String email, List<String> skillNames) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
-
         skillWantedRepository.deleteByStudentId(user.getId());
         skillWantedRepository.flush();
 
@@ -31,28 +31,24 @@ public class StudentSkillService {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .distinct()
-                .map(name -> getOrCreateSkill(name))
+                .map(this::getOrCreateSkill)
                 .toList();
 
         for (Skill skill : skills) {
             skillWantedRepository.save(new SkillWanted(user, skill));
         }
-
-        return skills.stream()
-                .sorted(java.util.Comparator.comparing(Skill::getName))
-                .map(SkillResponse::from)
-                .toList();
+        return skills.stream().sorted(Comparator.comparing(Skill::getName))
+                .map(SkillResponse::from).toList();
     }
 
     @Transactional(readOnly = true)
     public List<SkillResponse> listWantedSkills(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
-
         Collection<SkillWanted> wanted = skillWantedRepository.findByStudentIdWithSkill(user.getId());
         return wanted.stream()
                 .map(SkillWanted::getSkill)
-                .sorted(java.util.Comparator.comparing(Skill::getName))
+                .sorted(Comparator.comparing(Skill::getName))
                 .map(SkillResponse::from)
                 .toList();
     }

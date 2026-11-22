@@ -40,9 +40,12 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/register", "/auth/login").permitAll()
+                .requestMatchers("/auth/register", "/auth/login", "/auth/google", "/auth/logout").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/people/*/photo", "/tutors/*/reviews").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/error").permitAll()
+                // The WebSocket handshake interceptor authenticates browser upgrades.
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/live/bookings/*").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/payment/webhook").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/skills").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/tutors/profile").authenticated()

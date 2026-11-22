@@ -6,6 +6,8 @@ import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { Alert } from '../components/ui/Alert'
 import { Spinner } from '../components/ui/Spinner'
+import { SkillMatches } from '../components/SkillMatches'
+import { getStoredUser } from '../services/auth'
 import { searchTutors, fetchSkills } from '../services/tutors'
 import type { PageData, Skill, TutorSummary } from '../types'
 
@@ -38,7 +40,7 @@ function TutorCard({ tutor }: { tutor: TutorSummary }) {
       className="flex cursor-pointer flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-ring"
     >
       <div className="flex items-center gap-3">
-        <Avatar name={tutor.name} />
+        <Avatar name={tutor.name} userId={tutor.userId} />
         <div className="min-w-0">
           <h3 className="truncate text-base font-semibold text-text">
             {tutor.name}
@@ -73,6 +75,7 @@ function TutorCard({ tutor }: { tutor: TutorSummary }) {
           ))}
         </ul>
       )}
+      <span className="mt-auto border-t border-border pt-3 text-sm font-semibold text-primary">View profile <span aria-hidden="true">↗</span></span>
     </article>
   )
 }
@@ -169,8 +172,9 @@ function Discover() {
 
   return (
     <AppShell>
-      <div className="mb-6">
-        <h1 className="m-0 text-2xl font-bold text-text">Find a Tutor</h1>
+      <div className="workspace-head mb-6">
+        <p className="eyebrow">Tutor directory</p>
+        <h1>Find your tutor.</h1>
         <p className="m-0 mt-1 text-sm text-text-secondary">
           Search tutors by subject, skill, or keyword
         </p>
@@ -181,6 +185,7 @@ function Discover() {
           {error}
         </Alert>
       )}
+      {getStoredUser()?.role==='STUDENT' && <SkillMatches/>}
 
       <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -246,7 +251,7 @@ function Discover() {
           <div className="flex justify-center py-16 text-text-secondary">
             <Spinner size="lg" />
           </div>
-        ) : totalElements === 0 ? (
+        ) : error && pageData === null ? null : totalElements === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-surface py-16 text-center">
             <p className="m-0 text-sm font-medium text-text-secondary">
               No tutors found

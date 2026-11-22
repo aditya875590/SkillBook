@@ -185,7 +185,8 @@ function TutorAvailabilityPage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6">
+        <div className="workspace-head mb-6">
+          <p className="eyebrow">Tutor studio / Schedule</p>
           <h1 className="m-0 text-2xl font-bold text-text">My availability</h1>
           <p className="mt-1 text-sm text-text-secondary">
             Set your recurring weekly hours, then generate concrete bookable

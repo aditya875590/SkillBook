@@ -10,6 +10,7 @@ import java.util.UUID;
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     List<Booking> findAllByStudentIdOrderByCreatedAtDesc(UUID studentId);
+    List<Booking> findAllBySlot_Tutor_IdOrderByCreatedAtDesc(UUID tutorId);
 
     Optional<Booking> findByIdAndStudentId(UUID id, UUID studentId);
 
